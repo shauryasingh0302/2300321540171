@@ -1,0 +1,55 @@
+[
+  {
+    "depotId": 1,
+    "mechanicHours": 60,
+    "totalImpact": 110,
+    "totalDuration": 57,
+    "selectedTaskCount": 4,
+    "selectedTasks": [
+      {
+        "TaskID": "task-2",
+        "Duration": 10,
+        "Impact": 20
+      },
+      {
+        "TaskID": "task-3",
+        "Duration": 15,
+        "Impact": 30
+      },
+      {
+        "TaskID": "task-5",
+        "Duration": 12,
+        "Impact": 25
+      },
+      {
+        "TaskID": "task-6",
+        "Duration": 20,
+        "Impact": 35
+      }
+    ]
+  },
+  {
+    "depotId": 2,
+    "mechanicHours": 40,
+    "totalImpact": 75,
+    "totalDuration": 37,
+    "selectedTaskCount": 3,
+    "selectedTasks": [
+      {
+        "TaskID": "task-2",
+        "Duration": 10,
+        "Impact": 20
+      },
+      {
+        "TaskID": "task-3",
+        "Duration": 15,
+        "Impact": 30
+      },
+      {
+        "TaskID": "task-5",
+        "Duration": 12,
+        "Impact": 25
+      }
+    ]
+  }
+]

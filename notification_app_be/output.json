@@ -1,0 +1,72 @@
+[
+  {
+    "id": "20978419-5d7a-40b8-994d-6d6d3d85e494",
+    "type": "Placement",
+    "message": "Alphabet Inc. Class A hiring",
+    "createdAt": "2026-06-09 05:36:00",
+    "priorityScore": 6
+  },
+  {
+    "id": "481f4b04-39f3-402c-bdcb-23f14f8f4cdb",
+    "type": "Placement",
+    "message": "Alphabet Inc. Class A hiring",
+    "createdAt": "2026-06-09 04:34:52",
+    "priorityScore": 6
+  },
+  {
+    "id": "ed6fafc5-e873-434d-92c4-cc17013d9ae0",
+    "type": "Placement",
+    "message": "Marriott International Inc. hiring",
+    "createdAt": "2026-06-08 22:35:09",
+    "priorityScore": 6
+  },
+  {
+    "id": "880ac80b-8ce4-433a-93b5-6223538591a1",
+    "type": "Placement",
+    "message": "Meta Platforms Inc. hiring",
+    "createdAt": "2026-06-08 15:06:34",
+    "priorityScore": 6
+  },
+  {
+    "id": "5e79236d-725a-48b3-9b45-c52e371a38a5",
+    "type": "Result",
+    "message": "external",
+    "createdAt": "2026-06-09 06:38:33",
+    "priorityScore": 5
+  },
+  {
+    "id": "8d6d7418-61d8-4657-8d9d-2287c53c0e32",
+    "type": "Result",
+    "message": "mid-sem",
+    "createdAt": "2026-06-09 06:07:25",
+    "priorityScore": 5
+  },
+  {
+    "id": "f11c8895-ede0-45ec-9926-9d74b23c4ed5",
+    "type": "Result",
+    "message": "project-review",
+    "createdAt": "2026-06-09 02:35:26",
+    "priorityScore": 5
+  },
+  {
+    "id": "64991cfc-02ad-46a0-a430-0d5aab2a0ea6",
+    "type": "Result",
+    "message": "internal",
+    "createdAt": "2026-06-08 22:37:59",
+    "priorityScore": 5
+  },
+  {
+    "id": "2a09277a-9963-423a-879e-6c54f22b85c7",
+    "type": "Result",
+    "message": "external",
+    "createdAt": "2026-06-08 21:34:18",
+    "priorityScore": 5
+  },
+  {
+    "id": "56556322-2cf6-416b-8b5b-eeac49687331",
+    "type": "Result",
+    "message": "internal",
+    "createdAt": "2026-06-08 19:34:01",
+    "priorityScore": 5
+  }
+]

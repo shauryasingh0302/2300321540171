@@ -635,3 +635,179 @@ The main performance issue with the original query is that it may scan a large n
 
 
 
+# Stage 4: Scaling Unread Notification Retrieval
+
+## Problem Statement
+
+As the college grows, the number of students and notifications will increase significantly.
+
+A student may receive thousands of notifications over time. If the application tries to load all unread notifications at once, it can lead to:
+
+* Slow API response time
+* Increased database load
+* Higher memory usage
+* Poor user experience
+
+Therefore, the system should be designed to handle large volumes of notification data efficiently.
+
+---
+
+## Solution 1: Pagination
+
+Instead of returning all unread notifications in a single request, notifications should be fetched in smaller batches.
+
+Example:
+
+```http
+GET /api/notifications/unread?page=1&limit=20
+```
+
+Response:
+
+```json
+{
+  "page": 1,
+  "limit": 20,
+  "totalUnread": 350,
+  "notifications": [...]
+}
+```
+
+Benefits:
+
+* Faster response time
+* Lower memory consumption
+* Better user experience
+* Easier to scale
+
+---
+
+## Solution 2: Database Indexing
+
+Unread notifications are frequently accessed.
+
+Creating an index on these columns improves query performance:
+
+```sql
+CREATE INDEX idx_student_unread
+ON student_notifications(student_id, is_read);
+```
+
+Benefits:
+
+* Faster filtering
+* Reduced database scans
+* Better performance with large datasets
+
+---
+
+## Solution 3: Caching Frequently Accessed Data
+
+Unread notification counts are requested very often.
+
+Instead of querying the database every time, the count can be stored in Redis.
+
+Example:
+
+```text
+Redis Key:
+unread_count:1042
+
+Value:
+12
+```
+
+Workflow:
+
+1. User opens dashboard.
+2. Application checks Redis.
+3. If value exists, return it immediately.
+4. Otherwise fetch from database and update Redis.
+
+Benefits:
+
+* Faster responses
+* Reduced database load
+* Better scalability
+
+---
+
+## Solution 4: Lazy Loading
+
+Notifications should not be loaded all at once.
+
+Initially:
+
+```text
+Load first 20 notifications
+```
+
+When the user scrolls:
+
+```text
+Load next 20 notifications
+```
+
+Benefits:
+
+* Faster page loading
+* Better frontend performance
+* Reduced network usage
+
+---
+
+## Solution 5: Archiving Old Notifications
+
+Very old notifications are rarely accessed.
+
+For example:
+
+```text
+Notifications older than 1 year
+```
+
+can be moved to an archive table.
+
+Example:
+
+```sql
+notifications_archive
+```
+
+Benefits:
+
+* Smaller active tables
+* Faster queries
+* Better database performance
+
+---
+
+## Recommended Architecture
+
+For this notification system, I would use:
+
+1. PostgreSQL for storing notifications.
+2. Indexing on student_id and is_read.
+3. Pagination for fetching data.
+4. Redis for unread notification count caching.
+5. Lazy loading on the frontend.
+
+This combination provides good performance while keeping the implementation simple.
+
+---
+
+## Trade-offs
+
+| Approach     | Advantage               | Limitation                             |
+| ------------ | ----------------------- | -------------------------------------- |
+| Pagination   | Fast responses          | Multiple requests required             |
+| Indexing     | Faster queries          | Extra storage needed                   |
+| Redis Cache  | Very fast reads         | Cache must be updated correctly        |
+| Lazy Loading | Better user experience  | Additional frontend logic              |
+| Archiving    | Smaller active database | Archived data becomes harder to access |
+
+---
+
+## Conclusion
+
+To support a large number of students and notifications, the system should avoid loading all unread notifications at once. Using pagination, indexing, caching, and lazy loading can significantly improve performance and allow the application to scale efficiently as the number of users grows.

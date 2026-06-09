@@ -1,0 +1,13 @@
+{
+  "name": "vehicle_maintenence_scheduler",
+  "version": "1.0.0",
+  "description": "Vehicle maintenance scheduling using knapsack optimization",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.0.0"
+  }
+}

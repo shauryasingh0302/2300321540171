@@ -281,3 +281,214 @@ data: {
 5. Real-time updates are delivered using SSE.
 
 
+
+# Stage 2: Database Design
+
+## Database Choice
+
+For this system, I would use **PostgreSQL**.
+
+Reasons:
+
+* Notification data is structured.
+* Relationships between students and notifications can be easily managed.
+* PostgreSQL provides indexing and query optimization features.
+* It handles large amounts of data efficiently.
+
+---
+
+# Database Tables
+
+## 1. Students Table
+
+This table stores basic student information.
+
+| Column     | Type         | Description          |
+| ---------- | ------------ | -------------------- |
+| student_id | INTEGER      | Unique student ID    |
+| name       | VARCHAR(100) | Student name         |
+| email      | VARCHAR(100) | Student email        |
+| branch     | VARCHAR(50)  | Student branch       |
+| created_at | TIMESTAMP    | Record creation time |
+
+### Schema
+
+```sql
+CREATE TABLE students (
+    student_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    branch VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 2. Notifications Table
+
+This table stores notification details.
+
+| Column          | Type         | Description                |
+| --------------- | ------------ | -------------------------- |
+| notification_id | UUID         | Unique notification ID     |
+| type            | VARCHAR(20)  | Placement, Result or Event |
+| title           | VARCHAR(255) | Notification title         |
+| message         | TEXT         | Notification content       |
+| created_at      | TIMESTAMP    | Notification creation time |
+
+### Schema
+
+```sql
+CREATE TABLE notifications (
+    notification_id UUID PRIMARY KEY,
+    type VARCHAR(20) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 3. Student Notifications Table
+
+A notification may be sent to many students, and each student can receive many notifications.
+
+This table stores that mapping and read status.
+
+| Column          | Type      | Description                     |
+| --------------- | --------- | ------------------------------- |
+| id              | SERIAL    | Unique row ID                   |
+| student_id      | INTEGER   | Student ID                      |
+| notification_id | UUID      | Notification ID                 |
+| is_read         | BOOLEAN   | Read status                     |
+| read_at         | TIMESTAMP | Time when notification was read |
+
+### Schema
+
+```sql
+CREATE TABLE student_notifications (
+    id SERIAL PRIMARY KEY,
+    student_id INTEGER REFERENCES students(student_id),
+    notification_id UUID REFERENCES notifications(notification_id),
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at TIMESTAMP
+);
+```
+
+---
+
+# Relationship Diagram
+
+```text
+Students
+    |
+    |
+    v
+Student_Notifications
+    ^
+    |
+    |
+Notifications
+```
+
+A student can receive many notifications.
+
+A notification can be sent to many students.
+
+---
+
+# Common Queries
+
+## Get All Notifications for a Student
+
+```sql
+SELECT n.notification_id,
+       n.type,
+       n.title,
+       n.message,
+       sn.is_read,
+       n.created_at
+FROM student_notifications sn
+JOIN notifications n
+ON sn.notification_id = n.notification_id
+WHERE sn.student_id = 1042
+ORDER BY n.created_at DESC;
+```
+
+---
+
+## Get Unread Notifications
+
+```sql
+SELECT n.notification_id,
+       n.title,
+       n.type,
+       n.created_at
+FROM student_notifications sn
+JOIN notifications n
+ON sn.notification_id = n.notification_id
+WHERE sn.student_id = 1042
+AND sn.is_read = FALSE
+ORDER BY n.created_at DESC;
+```
+
+---
+
+## Mark Notification as Read
+
+```sql
+UPDATE student_notifications
+SET is_read = TRUE,
+    read_at = CURRENT_TIMESTAMP
+WHERE student_id = 1042
+AND notification_id = 'notification-id';
+```
+
+---
+
+## Count Unread Notifications
+
+```sql
+SELECT COUNT(*)
+FROM student_notifications
+WHERE student_id = 1042
+AND is_read = FALSE;
+```
+
+---
+
+# Scaling Considerations
+
+As the number of students and notifications increases, the database size will also grow.
+
+To maintain performance:
+
+1. Create indexes on frequently queried columns.
+2. Use pagination when fetching notifications.
+3. Avoid returning large datasets in a single request.
+4. Archive very old notifications if required.
+
+Example indexes:
+
+```sql
+CREATE INDEX idx_student_notifications_student
+ON student_notifications(student_id);
+
+CREATE INDEX idx_student_notifications_read
+ON student_notifications(is_read);
+
+CREATE INDEX idx_notifications_created_at
+ON notifications(created_at DESC);
+```
+
+---
+
+# Why This Design?
+
+I chose this design because it keeps notification information separate from student-specific information.
+
+The notifications table stores notification content only once, while the student_notifications table stores which student received the notification and whether it has been read.
+
+This reduces data duplication and makes the system easier to maintain.

@@ -811,3 +811,234 @@ This combination provides good performance while keeping the implementation simp
 ## Conclusion
 
 To support a large number of students and notifications, the system should avoid loading all unread notifications at once. Using pagination, indexing, caching, and lazy loading can significantly improve performance and allow the application to scale efficiently as the number of users grows.
+
+
+
+# Stage 5: Improving the Bulk Notification System
+
+## Problem with the Current Approach
+
+The current implementation sends notifications one by one:
+
+```python
+for student in students:
+    send_notification(student.id, message)
+```
+
+This approach works for a small number of students, but it becomes inefficient when the number of students increases.
+
+For example, if a placement notification needs to be sent to 10,000 students:
+
+* The request may take a long time to complete.
+* Server resources will be blocked.
+* A failure in the middle may leave some students without notifications.
+* The system will not scale well as the number of users grows.
+
+---
+
+## Proposed Solution
+
+Instead of sending notifications directly, I would use a **Message Queue**.
+
+The main idea is:
+
+1. The application creates notification jobs.
+2. These jobs are pushed into a queue.
+3. Worker processes consume jobs from the queue.
+4. Workers send notifications in the background.
+
+This makes the API much faster because it only creates jobs and returns immediately.
+
+---
+
+## Architecture
+
+```text
+Admin Creates Notification
+            |
+            v
+     Notification Service
+            |
+            v
+       Message Queue
+      (RabbitMQ/Kafka)
+            |
+            v
+          Workers
+            |
+            v
+      Students Receive
+       Notifications
+```
+
+---
+
+## Workflow
+
+### Step 1
+
+Admin creates a notification.
+
+Example:
+
+```json
+{
+  "type": "Placement",
+  "title": "Microsoft Hiring Drive",
+  "message": "Applications are now open."
+}
+```
+
+---
+
+### Step 2
+
+The Notification Service stores the notification in the database.
+
+---
+
+### Step 3
+
+A job is pushed into the queue.
+
+Example:
+
+```json
+{
+  "notificationId": "n101",
+  "studentId": 1042
+}
+```
+
+---
+
+### Step 4
+
+Worker processes continuously listen to the queue.
+
+```text
+Worker 1
+Worker 2
+Worker 3
+Worker 4
+```
+
+Each worker processes a portion of the workload.
+
+---
+
+### Step 5
+
+Workers deliver notifications and update the database.
+
+---
+
+## Why Use a Queue?
+
+### Advantages
+
+1. Faster API response.
+2. Better scalability.
+3. Background processing.
+4. Easier handling of large batches.
+5. Reduced load on the main application.
+
+For example:
+
+Instead of sending 10,000 notifications in a single request, the application only creates 10,000 queue jobs and immediately returns a success response.
+
+---
+
+## Retry Mechanism
+
+Sometimes notification delivery may fail because of:
+
+* Network issues
+* Database issues
+* Temporary server problems
+
+To handle this, failed jobs should be retried automatically.
+
+Example:
+
+```text
+Attempt 1 -> Failed
+Attempt 2 -> Failed
+Attempt 3 -> Success
+```
+
+If all attempts fail, the job can be moved to a Dead Letter Queue (DLQ).
+
+---
+
+## Idempotency
+
+A student should not receive the same notification multiple times.
+
+To prevent duplicates, a unique record should be maintained.
+
+Example:
+
+```sql
+UNIQUE(student_id, notification_id)
+```
+
+This ensures that even if the same job is processed again, duplicate notifications are not created.
+
+---
+
+## Improved Pseudocode
+
+```python
+def notify_all_students(notification):
+
+    save_notification(notification)
+
+    for student in students:
+
+        queue.publish({
+            "studentId": student.id,
+            "notificationId": notification.id
+        })
+
+    return "Notification jobs added to queue"
+```
+
+Worker:
+
+```python
+while True:
+
+    job = queue.consume()
+
+    try:
+        send_notification(
+            job.studentId,
+            job.notificationId
+        )
+
+        mark_as_sent(job)
+
+    except Exception:
+
+        retry(job)
+```
+
+---
+
+## Technology Choice
+
+For this system, I would choose:
+
+* PostgreSQL → Notification storage
+* RabbitMQ → Message queue
+* Redis → Caching unread counts
+* Node.js Workers → Background processing
+
+RabbitMQ is a good choice because it is simple to set up and works well for notification-based systems.
+
+---
+
+## Conclusion
+
+The original implementation sends notifications synchronously and does not scale well for a large number of students. Using a message queue and worker-based architecture allows notifications to be processed in the background, improves performance, and makes the system more reliable when handling large notification batches.

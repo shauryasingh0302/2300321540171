@@ -15,7 +15,8 @@ async function fetchDepots() {
       "http://4.224.186.213/evaluation-service/depots",
       {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         }
       }
     );
@@ -24,12 +25,7 @@ async function fetchDepots() {
     await Log("backend", "info", "service", `Successfully fetched ${depots.length} depots`);
     return depots;
   } catch (error) {
-    const status = error.response?.status;
-    const data = error.response?.data;
-    const errorMsg = status
-      ? `HTTP ${status} - ${JSON.stringify(data)}`
-      : error.message;
-    console.error("fetchDepots error:", errorMsg);
+    const errorMsg = error.response?.data?.message || error.message;
     await Log("backend", "error", "service", `Failed to fetch depots: ${errorMsg}`);
     throw error;
   }

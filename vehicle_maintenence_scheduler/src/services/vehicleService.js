@@ -15,7 +15,8 @@ async function fetchVehicles() {
       "http://4.224.186.213/evaluation-service/vehicles",
       {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         }
       }
     );
@@ -24,12 +25,7 @@ async function fetchVehicles() {
     await Log("backend", "info", "service", `Successfully fetched ${vehicles.length} vehicles`);
     return vehicles;
   } catch (error) {
-    const status = error.response?.status;
-    const data = error.response?.data;
-    const errorMsg = status
-      ? `HTTP ${status} - ${JSON.stringify(data)}`
-      : error.message;
-    console.error("fetchVehicles error:", errorMsg);
+    const errorMsg = error.response?.data?.message || error.message;
     await Log("backend", "error", "service", `Failed to fetch vehicles: ${errorMsg}`);
     throw error;
   }

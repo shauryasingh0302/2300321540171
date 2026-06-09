@@ -492,3 +492,146 @@ I chose this design because it keeps notification information separate from stud
 The notifications table stores notification content only once, while the student_notifications table stores which student received the notification and whether it has been read.
 
 This reduces data duplication and makes the system easier to maintain.
+
+
+
+# Stage 3: Query Optimization and Performance Analysis
+
+## Given Query
+
+```sql
+SELECT *
+FROM notifications
+WHERE studentID = 1042
+AND isRead = false
+ORDER BY createdAt DESC;
+```
+
+---
+
+## Why Can This Query Become Slow?
+
+When the number of notifications is small, this query will work quickly.
+
+However, in a real college notification system there may be thousands or even millions of notification records.
+
+Without proper indexing, the database has to scan many rows to:
+
+1. Find notifications belonging to student 1042.
+2. Filter only unread notifications.
+3. Sort the results by createdAt.
+
+This increases query execution time as data grows.
+
+---
+
+## Indexing Strategy
+
+To improve performance, I would create a composite index on the columns that are most frequently used in the query.
+
+```sql
+CREATE INDEX idx_notifications_student_read_created
+ON student_notifications(student_id, is_read, notification_id);
+```
+
+For sorting by creation time, I would also use:
+
+```sql
+CREATE INDEX idx_notifications_created_at
+ON notifications(created_at DESC);
+```
+
+These indexes help PostgreSQL locate matching rows faster instead of scanning the entire table.
+
+---
+
+## Optimized Query
+
+```sql
+SELECT n.notification_id,
+       n.type,
+       n.title,
+       n.message,
+       n.created_at
+FROM student_notifications sn
+JOIN notifications n
+ON sn.notification_id = n.notification_id
+WHERE sn.student_id = 1042
+AND sn.is_read = FALSE
+ORDER BY n.created_at DESC;
+```
+
+This query is better because:
+
+* Only required columns are selected.
+* Unnecessary data is not transferred.
+* Indexed columns are used in filtering.
+* Sorting becomes faster.
+
+---
+
+## Query to Fetch Placement Notifications from the Last 7 Days
+
+```sql
+SELECT *
+FROM notifications
+WHERE type = 'Placement'
+AND created_at >= NOW() - INTERVAL '7 days'
+ORDER BY created_at DESC;
+```
+
+---
+
+## Index for Placement Query
+
+```sql
+CREATE INDEX idx_notifications_type_created
+ON notifications(type, created_at DESC);
+```
+
+This index helps because:
+
+* The database can quickly find Placement notifications.
+* Sorting by date becomes faster.
+* Less data needs to be scanned.
+
+---
+
+## Why Not Index Every Column?
+
+Although indexes improve read performance, creating indexes on every column is not a good idea.
+
+Problems:
+
+1. More storage space is required.
+2. Insert operations become slower.
+3. Update operations become slower.
+4. Delete operations become slower.
+5. Extra indexes increase database maintenance overhead.
+
+Because of this, indexes should only be created on columns that are frequently used in:
+
+* WHERE clauses
+* JOIN conditions
+* ORDER BY clauses
+
+---
+
+## Performance Improvement Summary
+
+| Technique                       | Benefit                    |
+| ------------------------------- | -------------------------- |
+| Composite Index                 | Faster filtering           |
+| CreatedAt Index                 | Faster sorting             |
+| Selecting Required Columns Only | Less data transfer         |
+| Pagination                      | Prevents large result sets |
+| Proper Joins                    | Better query execution     |
+
+---
+
+## Conclusion
+
+The main performance issue with the original query is that it may scan a large number of rows and perform sorting operations repeatedly. By creating suitable indexes and selecting only the required columns, query execution becomes faster and the system can handle a larger number of notifications efficiently.
+
+
+

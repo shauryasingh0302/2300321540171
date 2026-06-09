@@ -1,0 +1,13 @@
+{
+  "name": "notification_app_be",
+  "version": "1.0.0",
+  "description": "Simple Campus Notification System backend for Stage 6.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.0.0"
+  }
+}
